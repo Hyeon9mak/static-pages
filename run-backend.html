@@ -83,13 +83,7 @@
             font-weight: bold;
             font-size: 14px;
         }
-        .track {
-            flex-grow: 1;
-            height: 60px;
-            background-color: #ecf0f1;
-            border-radius: 15px;
-            position: relative;
-        }
+
         .runner {
             position: absolute;
             left: 0;
@@ -97,25 +91,23 @@
             height: 60px;
             width: 60px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: left 0.1s ease-in-out;
+            transition: left 0.3s linear;
         }
+
         .runner img {
             width: 50px;
             height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            z-index: 2;
         }
-        .jollaman {
-            position: absolute;
-            width: 60px;
+        .track {
+            flex-grow: 1;
             height: 60px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233498db"/><rect x="20" y="65" width="60" height="30" rx="10" fill="%233498db"/><rect x="30" y="90" width="10" height="20" fill="black"/><rect x="60" y="90" width="10" height="20" fill="black"/></svg>');
-            background-size: cover;
-            z-index: 1;
+            background-color: #ecf0f1;
+            border-radius: 15px;
+            position: relative;
         }
         .finish-line {
             position: absolute;
@@ -347,9 +339,8 @@
                         ${char.name}
                     </div>
                     <div class="track">
-                        <div class="runner" id="runner-${index}">
-                            <img src="${char.img}" alt="${char.name}">
-                            <div class="jollaman" style="background-color: ${char.color};"></div>
+                        <div class="runner" id="runner-${index}" style="position: absolute; left: 0; top: 0; height: 60px; display: flex; align-items: center; transition: left 0.1s ease-in-out;">
+                            <img src="${char.img}" alt="${char.name}" style="width: 40px; height: 40px; border-radius: 50%;">
                         </div>
                         <div class="finish-line"></div>
                     </div>
@@ -370,39 +361,56 @@
             
             document.getElementById('startRaceBtn').style.display = 'none';
             
-            // 각 캐릭터의 기본 속도와 변동성 랜덤 결정
-            const baseSpeed = raceParticipants.map(() => Math.random() * 3 + 2); // 기본 속도 (2-5)
-            const speedVariability = raceParticipants.map(() => Math.random() * 2); // 속도 변동성 (0-2)
+            // 각 캐릭터의 기본 속도 설정 (약간의 차이를 두어 초기 속도 다양화)
+            const baseSpeed = raceParticipants.map(() => Math.random() * 2 + 2); // 기본 속도 (2-4)
             
             const trackWidth = document.querySelector('.track').offsetWidth - 60; // runner 너비(60px) 고려
+            const finalStagePoint = trackWidth * 0.7; // 마지막 30% 구간의 시작점
+            
             let finishedCount = 0;
             
-            raceParticipants.forEach((char, index) => {
-                const runner = document.getElementById(`runner-${index}`);
-                runner.classList.add('running'); // 졸라맨 달리기 애니메이션 추가
-                
-                let position = 0;
-                let finished = false;
-                
-                // 간헐적으로 위치 업데이트 (뒤뚱뒤뚱 효과)
-                const interval = setInterval(() => {
-                    if (finished) return;
+            const positions = Array(raceParticipants.length).fill(0);
+            const finished = Array(raceParticipants.length).fill(false);
+            
+            // 레이스 상태 업데이트 함수
+            const updateRace = () => {
+                raceParticipants.forEach((char, index) => {
+                    if (finished[index]) return;
                     
-                    // 랜덤한 속도로 이동 (기본 속도 + 변동성)
-                    const step = baseSpeed[index] + (Math.random() * speedVariability[index] - speedVariability[index]/2);
-                    position += step;
+                    let speedMultiplier;
+                    
+                    // 마지막 30% 구간에서는 더 극적인 속도 변화
+                    if (positions[index] >= finalStagePoint) {
+                        const random = Math.random();
+                        
+                        if (random < 0.10) {
+                            // 10% 확률로 강력한 가속 (2~2.5배 속도)
+                            speedMultiplier = 2 + Math.random() * 0.5;
+                        } else if (random < 0.20) {
+                            // 10% 확률로 심각한 감속 (0.2~0.4배 속도)
+                            speedMultiplier = 0.2 + Math.random() * 0.2;
+                        } else {
+                            // 80% 확률로 약간의 변동 (0.7~1.3배 속도)
+                            speedMultiplier = 0.7 + Math.random() * 0.6;
+                        }
+                    } else {
+                        // 일반 구간에서는 약간의 속도 변화만
+                        speedMultiplier = 0.9 + Math.random() * 0.2; // 0.9~1.1배 속도
+                    }
+                    
+                    // 기본 속도에 랜덤 변동 적용
+                    const step = baseSpeed[index] * speedMultiplier;
+                    positions[index] += step;
                     
                     // 위치 업데이트
-                    runner.style.left = `${Math.min(position, trackWidth)}px`;
+                    const runner = document.getElementById(`runner-${index}`);
+                    runner.style.left = `${Math.min(positions[index], trackWidth)}px`;
                     
                     // 도착 확인
-                    if (position >= trackWidth && !finished) {
-                        finished = true;
+                    if (positions[index] >= trackWidth && !finished[index]) {
+                        finished[index] = true;
                         const finishTime = Date.now(); // 현재 시간 기록
                         finishedCount++;
-                        
-                        // 애니메이션 중지
-                        runner.classList.remove('running');
                         
                         // 결과에 추가
                         raceResults.push({
@@ -419,14 +427,16 @@
                         // 모두 완주했는지 확인
                         if (finishedCount === raceParticipants.length) {
                             raceFinished = true;
-                            clearAllIntervals();
+                            clearInterval(raceInterval);
                             document.getElementById('newRaceBtn').style.display = 'inline-block';
                         }
                     }
-                }, 100);
-                
-                runnerIntervals.push(interval);
-            });
+                });
+            };
+            
+            // 30ms마다 업데이트하여 더 부드럽게 이동
+            const raceInterval = setInterval(updateRace, 30);
+            runnerIntervals.push(raceInterval);
         }
         
         // 모든 인터벌 정리
