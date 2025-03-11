@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>달려라, 백엔드!</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .selection-area {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .character-select {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .character-option {
+            cursor: pointer;
+            width: 80px;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            padding: 5px;
+            transition: all 0.2s;
+        }
+        .character-option.selected {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+        }
+        .character-option img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .character-option p {
+            margin: 5px 0 0;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .race-track {
+            background-color: #e9f5f9;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .character {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            height: 60px;
+            position: relative;
+        }
+        .character-name {
+            width: 100px;
+            text-align: right;
+            padding-right: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .track {
+            flex-grow: 1;
+            height: 60px;
+            background-color: #ecf0f1;
+            border-radius: 15px;
+            position: relative;
+        }
+        .runner {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 60px;
+            width: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: left 0.1s ease-in-out;
+        }
+        .runner img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            z-index: 2;
+        }
+        .jollaman {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233498db"/><rect x="20" y="65" width="60" height="30" rx="10" fill="%233498db"/><rect x="30" y="90" width="10" height="20" fill="black"/><rect x="60" y="90" width="10" height="20" fill="black"/></svg>');
+            background-size: cover;
+            z-index: 1;
+        }
+        .finish-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 60px;
+            width: 2px;
+            background-color: #e74c3c;
+        }
+        .results {
+            margin-top: 20px;
+            text-align: left;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .winner {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .winner img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .controls {
+            margin: 15px 0;
+        }
+        .result-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .result-item img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg) translateY(0); }
+            25% { transform: rotate(-5deg) translateY(-2px); }
+            75% { transform: rotate(5deg) translateY(2px); }
+        }
+        .running {
+            animation: wobble 0.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🏁 팀원 졸라맨 달리기 🏁</h1>
+        
+        <div class="selection-area" id="selectionArea">
+            <h3>달리기에 참여할 팀원을 선택하세요</h3>
+            <div class="character-select" id="characterSelect">
+                <!-- 캐릭터 선택 옵션들이 여기에 추가됩니다 -->
+            </div>
+            <p id="selectionInfo">0명 선택됨</p>
+            <button class="btn" id="confirmSelectionBtn" disabled>선택 완료</button>
+        </div>
+        
+        <div class="race-track" id="raceTrack" style="display: none;">
+            <!-- 선택된 캐릭터들이 여기에 추가됩니다 -->
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startRaceBtn" onclick="startRace()" style="display: none;">달려!</button>
+            <button class="btn" id="newRaceBtn" onclick="resetGame()" style="display: none;">다시 달려!</button>
+        </div>
+        
+        <div class="results" id="results" style="display: none;">
+            <h2>결과</h2>
+            <div id="ranking"></div>
+            <div id="winner" class="winner"></div>
+        </div>
+    </div>
+
+    <script>
+        // 11명의 팀원 정보 (실제 이미지는 플레이스홀더로 대체되어 있습니다)
+        const teamMembers = [
+            { id: 1, name: "강진솔", img: "https://ca.slack-edge.com/T03385HMGMD-U0894U7NFE0-ga1a417812ff-512", color: "#e84393" },
+            { id: 2, name: "김춘성", img: "https://ca.slack-edge.com/T03385HMGMD-U051068D1F1-7926bd44a9eb-512", color: "#00b894" },
+            { id: 3, name: "민경수", img: "https://ca.slack-edge.com/T03385HMGMD-U03M10B51M4-4f366cd9d5d0-512", color: "#fdcb6e" },
+            { id: 4, name: "신윤철", img: "https://ca.slack-edge.com/T03385HMGMD-U055KQ0C9EJ-94055df75db2-512", color: "#e17055" },
+            { id: 5, name: "안진성", img: "https://ca.slack-edge.com/T03385HMGMD-U053JLRJCUC-844c38e0c496-512", color: "#6c5ce7" },
+            { id: 6, name: "유충민", img: "https://ca.slack-edge.com/T03385HMGMD-U044WANFJ05-e813de60fa49-512", color: "#2d3436" },
+            { id: 7, name: "윤형중", img: "https://ca.slack-edge.com/T03385HMGMD-U064BG82VLK-b63d474f4efc-512", color: "#ff7675" },
+            { id: 8, name: "임형준", img: "https://ca.slack-edge.com/T03385HMGMD-U043TRJGXMH-634905b61ab0-512", color: "#74b9ff" },
+            { id: 9, name: "정연재", img: "https://ca.slack-edge.com/T03385HMGMD-U03EHKUTDD5-bcdb33a801c4-512", color: "#a29bfe" },
+            { id: 10, name: "조경현", img: "https://ca.slack-edge.com/T03385HMGMD-U03HTSNCV09-f46ad9c6e485-512", color: "#55efc4" },
+            { id: 11, name: "최현구", img: "https://ca.slack-edge.com/T03385HMGMD-U052TE3TKA5-351357c25e7f-512", color: "#fab1a0" }
+        ];
+        
+        let selectedCharacters = [];
+        let raceParticipants = [];
+        let raceResults = [];
+        let raceFinished = false;
+        let raceID = generateRaceID();
+        let runnerIntervals = [];
+        
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            // URL에서 시드 값과 선택된 참가자 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const seed = urlParams.get('seed');
+            const participants = urlParams.get('participants');
+            
+            if (seed && participants) {
+                // 미리 설정된 참가자와 시드가 있는 경우
+                Math.seedrandom(seed);
+                const participantIds = participants.split(',').map(id => parseInt(id));
+                raceParticipants = teamMembers.filter(member => participantIds.includes(member.id));
+                
+                // 선택 화면 숨기고 레이스 화면 표시
+                document.getElementById('selectionArea').style.display = 'none';
+                setupRace();
+                document.getElementById('raceTrack').style.display = 'block';
+                document.getElementById('startRaceBtn').style.display = 'inline-block';
+                document.getElementById('results').style.display = 'block';
+                
+                // 자동 시작 옵션
+                if (urlParams.get('autostart') === 'true') {
+                    setTimeout(startRace, 1000);
+                }
+            } else {
+                // 캐릭터 선택 화면 설정
+                setupCharacterSelection();
+            }
+        };
+        
+        // 캐릭터 선택 화면 설정
+        function setupCharacterSelection() {
+            const characterSelect = document.getElementById('characterSelect');
+            characterSelect.innerHTML = '';
+            
+            teamMembers.forEach(member => {
+                const option = document.createElement('div');
+                option.className = 'character-option';
+                option.dataset.id = member.id;
+                option.innerHTML = `
+                    <img src="${member.img}" alt="${member.name}">
+                    <p>${member.name}</p>
+                `;
+                option.addEventListener('click', () => toggleCharacterSelection(option, member));
+                characterSelect.appendChild(option);
+            });
+            
+            document.getElementById('confirmSelectionBtn').addEventListener('click', confirmSelection);
+        }
+        
+        // 캐릭터 선택 토글
+        function toggleCharacterSelection(option, member) {
+            const isSelected = option.classList.contains('selected');
+            
+            if (isSelected) {
+                // 선택 해제
+                option.classList.remove('selected');
+                selectedCharacters = selectedCharacters.filter(char => char.id !== member.id);
+            } else {
+                // 선택 추가
+                option.classList.add('selected');
+                selectedCharacters.push(member);
+            }
+            
+            // 선택 정보 업데이트
+            document.getElementById('selectionInfo').textContent = `${selectedCharacters.length}명 선택됨`;
+            
+            // 버튼 활성화/비활성화
+            document.getElementById('confirmSelectionBtn').disabled = selectedCharacters.length === 0;
+        }
+        
+        // 선택 완료
+        function confirmSelection() {
+            if (selectedCharacters.length === 0) {
+                alert('최소 1명 이상의 참가자를 선택해주세요.');
+                return;
+            }
+            
+            // 선택된 캐릭터를 레이스 참가자로 설정
+            raceParticipants = [...selectedCharacters];
+            
+            // 선택 화면 숨기고 레이스 화면 표시
+            document.getElementById('selectionArea').style.display = 'none';
+            setupRace();
+            document.getElementById('raceTrack').style.display = 'block';
+            document.getElementById('startRaceBtn').style.display = 'inline-block';
+            document.getElementById('results').style.display = 'block';
+            
+            // URL 업데이트 (참가자 정보 포함)
+            const url = new URL(window.location.href);
+            url.searchParams.set('participants', raceParticipants.map(p => p.id).join(','));
+            window.history.replaceState({}, '', url);
+        }
+        
+        // 레이스 설정
+        function setupRace() {
+            const raceTrack = document.getElementById('raceTrack');
+            raceTrack.innerHTML = '';
+            
+            raceParticipants.forEach((char, index) => {
+                const characterDiv = document.createElement('div');
+                characterDiv.className = 'character';
+                characterDiv.innerHTML = `
+                    <div class="character-name">
+                        ${char.name}
+                    </div>
+                    <div class="track">
+                        <div class="runner" id="runner-${index}">
+                            <img src="${char.img}" alt="${char.name}">
+                            <div class="jollaman" style="background-color: ${char.color};"></div>
+                        </div>
+                        <div class="finish-line"></div>
+                    </div>
+                `;
+                raceTrack.appendChild(characterDiv);
+            });
+            
+            // 결과 초기화
+            document.getElementById('ranking').innerHTML = '';
+            document.getElementById('winner').innerHTML = '';
+            raceResults = [];
+            raceFinished = false;
+        }
+        
+        // 레이스 시작
+        function startRace() {
+            if (raceFinished) return;
+            
+            document.getElementById('startRaceBtn').style.display = 'none';
+            
+            // 각 캐릭터의 기본 속도와 변동성 랜덤 결정
+            const baseSpeed = raceParticipants.map(() => Math.random() * 3 + 2); // 기본 속도 (2-5)
+            const speedVariability = raceParticipants.map(() => Math.random() * 2); // 속도 변동성 (0-2)
+            
+            const trackWidth = document.querySelector('.track').offsetWidth - 60; // runner 너비(60px) 고려
+            let finishedCount = 0;
+            
+            raceParticipants.forEach((char, index) => {
+                const runner = document.getElementById(`runner-${index}`);
+                runner.classList.add('running'); // 졸라맨 달리기 애니메이션 추가
+                
+                let position = 0;
+                let finished = false;
+                
+                // 간헐적으로 위치 업데이트 (뒤뚱뒤뚱 효과)
+                const interval = setInterval(() => {
+                    if (finished) return;
+                    
+                    // 랜덤한 속도로 이동 (기본 속도 + 변동성)
+                    const step = baseSpeed[index] + (Math.random() * speedVariability[index] - speedVariability[index]/2);
+                    position += step;
+                    
+                    // 위치 업데이트
+                    runner.style.left = `${Math.min(position, trackWidth)}px`;
+                    
+                    // 도착 확인
+                    if (position >= trackWidth && !finished) {
+                        finished = true;
+                        const finishTime = Date.now(); // 현재 시간 기록
+                        finishedCount++;
+                        
+                        // 애니메이션 중지
+                        runner.classList.remove('running');
+                        
+                        // 결과에 추가
+                        raceResults.push({
+                            index: index,
+                            id: char.id,
+                            name: char.name,
+                            img: char.img,
+                            time: finishTime
+                        });
+                        
+                        // 결과 업데이트
+                        updateResults();
+                        
+                        // 모두 완주했는지 확인
+                        if (finishedCount === raceParticipants.length) {
+                            raceFinished = true;
+                            clearAllIntervals();
+                            document.getElementById('newRaceBtn').style.display = 'inline-block';
+                        }
+                    }
+                }, 100);
+                
+                runnerIntervals.push(interval);
+            });
+        }
+        
+        // 모든 인터벌 정리
+        function clearAllIntervals() {
+            runnerIntervals.forEach(interval => clearInterval(interval));
+            runnerIntervals = [];
+        }
+        
+        // 결과 업데이트
+        function updateResults() {
+            // 완주 시간 기준 정렬
+            raceResults.sort((a, b) => a.time - b.time);
+            
+            const rankingDiv = document.getElementById('ranking');
+            rankingDiv.innerHTML = '';
+            
+            raceResults.forEach((result, rank) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <img src="${result.img}" alt="${result.name}">
+                    <span>${rank + 1}등: ${result.name} (${((result.time - raceResults[0].time) / 1000).toFixed(2)}초 차이)</span>
+                `;
+                rankingDiv.appendChild(resultItem);
+            });
+            
+            // 우승자 표시
+            if (raceResults.length > 0) {
+                const winner = raceResults[0];
+                document.getElementById('winner').innerHTML = `
+                    <img src="${winner.img}" alt="${winner.name}">
+                    <span>우승: ${winner.name}</span>
+                `;
+            }
+        }
+        
+        // 게임 리셋
+        function resetGame() {
+            // 모든 인터벌 정리
+            clearAllIntervals();
+            
+            // 캐릭터 선택 화면으로 돌아가기
+            document.getElementById('selectionArea').style.display = 'block';
+            document.getElementById('raceTrack').style.display = 'none';
+            document.getElementById('startRaceBtn').style.display = 'none';
+            document.getElementById('newRaceBtn').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            
+            // 선택 초기화
+            selectedCharacters = [];
+            document.querySelectorAll('.character-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById('selectionInfo').textContent = '0/5명 선택됨';
+            document.getElementById('confirmSelectionBtn').disabled = true;
+            
+            // URL 초기화
+            const url = new URL(window.location.href);
+            url.searchParams.delete('seed');
+            url.searchParams.delete('participants');
+            url.searchParams.delete('autostart');
+            window.history.replaceState({}, '', url);
+            
+            raceID = generateRaceID();
+        }
+        
+        // 고유 레이스 ID 생성
+        function generateRaceID() {
+            return Math.random().toString(36).substring(2, 8);
+        }
+        
+        // 레이스 공유 URL 생성
+        function getShareURL() {
+            const seed = Math.random().toString(36).substring(2, 10);
+            const baseUrl = window.location.href.split('?')[0];
+            const participantIds = raceParticipants.map(p => p.id).join(',');
+            return `${baseUrl}?seed=${seed}&participants=${participantIds}&autostart=true`;
+        }
+        
+        // Math.random 시드 함수 (외부 라이브러리)
+        // 출처: https://github.com/davidbau/seedrandom
+        (function (global, pool, math) {
+            math['seedrandom'] = function(seed, options, callback) {
+                var key = [];
+                options = (options == true) ? { entropy: true } : (options || {});
+                
+                var shortseed = mixkey(seed ? seed : pool,
+                    pool.length);
+                
+                return (function(prng) {
+                    var orig = math.random;
+                    
+                    prng.next = function() {
+                        var n = 2091639 * prng.g1 + prng.g2 * 2.3283064365386963e-10;
+                        prng.g2 = prng.g1;
+                        return prng.g1 = n - (prng.g1 = n | 0);
+                    };
+                    
+                    math.random = function() {
+                        return prng.next();
+                    };
+                    
+                    return prng;
+                })(
+                    new function() {
+                        this.g1 = 1;
+                        this.g2 = shortseed;
+                    }()
+                );
+            };
+            
+            function mixkey(seed, key) {
+                var stringseed = seed + '';
+                var smear = 0;
+                for (var j = 0; j < stringseed.length; ++j) {
+                    var k = key.length;
+                    smear ^= key[j % k] + stringseed.charCodeAt(j);
+                }
+                return (smear >>> 0) / 4294967296;
+            }
+        })(
+            this,
+            [],
+            Math
+        );
+    </script>
+</body>
+</html>
