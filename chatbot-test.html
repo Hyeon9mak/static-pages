@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>검색AI 채팅봇 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .config-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .config-label {
+            min-width: 80px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+            color: #333;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .thread-info {
+            background: #e3f2fd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+
+        /* 마크다운 스타일 */
+        .message-content h1, .message-content h2, .message-content h3, 
+        .message-content h4, .message-content h5, .message-content h6 {
+            margin: 15px 0 10px 0;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .message-content h1 { font-size: 1.8em; }
+        .message-content h2 { font-size: 1.5em; }
+        .message-content h3 { font-size: 1.3em; }
+
+        .message-content p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 4px 0;
+            line-height: 1.5;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #ddd;
+            margin: 10px 0;
+            padding: 8px 15px;
+            background: #f9f9f9;
+            font-style: italic;
+        }
+
+        .message-content code {
+            background: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .message-content th, .message-content td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .message-content a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        /* 피드백 버튼 스타일 */
+        .feedback-container {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .feedback-btn {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .feedback-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .feedback-btn.active {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+        }
+
+        .feedback-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feedback-text {
+            font-size: 11px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        /* 피드백 모달 */
+        .feedback-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .feedback-modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .feedback-modal h3 {
+            margin: 0 0 16px 0;
+            color: #333;
+        }
+
+        .feedback-modal textarea {
+            width: 100%;
+            height: 100px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .feedback-modal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 검색AI 채팅봇 테스트</h1>
+            <p>v2 API 기반 실시간 채팅 테스트</p>
+        </div>
+
+        <div class="config-section">
+            <div class="config-row">
+                <label class="config-label">서버 URL:</label>
+                <input type="text" id="serverUrl" class="config-input" value="https://agent-front-server.dev.multiagent.lguplus.com" placeholder="서버 URL을 입력하세요">
+                <button id="connectBtn" class="btn btn-primary">연결</button>
+            </div>
+            <div class="config-row">
+                <label class="config-label">사용자 ID:</label>
+                <input type="text" id="userId" class="config-input" value="test-user-1234" placeholder="사용자 ID를 입력하세요">
+                <button id="createThreadBtn" class="btn btn-success" disabled>스레드 생성</button>
+            </div>
+            <div class="config-row" style="display: none;">
+                <label class="config-label">API 인증:</label>
+                <input type="text" id="apiUsername" class="config-input" value="DIGITAL-PLATFORM-BE-USERNAME" placeholder="API 사용자명">
+                <input type="password" id="apiPassword" class="config-input" value="DIGITAL-PLATFORM-BE-PASSWORD" placeholder="API 비밀번호">
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="status connecting">
+                서버에 연결하고 스레드를 생성해주세요.
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    class="chat-input" 
+                    placeholder="메시지를 입력하세요... (Enter로 전송, Shift+Enter로 줄바꿈)"
+                    disabled
+                ></textarea>
+                <button id="sendBtn" class="send-btn" disabled>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="m2 12 9-9v5.99L18.99 12 11 15.01V21z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 피드백 모달 -->
+    <div class="feedback-modal" id="feedbackModal">
+        <div class="feedback-modal-content">
+            <h3 id="feedbackModalTitle">피드백을 남겨주세요</h3>
+            <textarea id="feedbackReason" placeholder="이 답변에 대한 의견을 자유롭게 적어주세요... (선택사항)"></textarea>
+            <div class="feedback-modal-buttons">
+                <button class="btn btn-secondary" id="feedbackCancelBtn">취소</button>
+                <button class="btn btn-primary" id="feedbackSubmitBtn">제출</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatBot {
+            constructor() {
+                this.serverUrl = '';
+                this.userId = '';
+                this.threadId = '';
+                this.isConnected = false;
+                this.currentRunId = '';
+                this.currentFeedback = { threadId: '', runId: '', type: '' };
+
+                this.initElements();
+                this.bindEvents();
+                this.initMarkdown();
+            }
+
+            initMarkdown() {
+                // marked.js 설정
+                if (typeof marked !== 'undefined') {
+                    marked.setOptions({
+                        breaks: true,
+                        gfm: true,
+                        sanitize: false
+                    });
+                }
+            }
+
+            renderMarkdown(text) {
+                if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+                    const html = marked.parse(text);
+                    return DOMPurify.sanitize(html);
+                }
+                // 라이브러리가 없으면 기본 텍스트로 표시
+                return text.replace(/\n/g, '<br>');
+            }
+
+            initElements() {
+                this.serverUrlInput = document.getElementById('serverUrl');
+                this.userIdInput = document.getElementById('userId');
+                this.apiUsernameInput = document.getElementById('apiUsername');
+                this.apiPasswordInput = document.getElementById('apiPassword');
+                this.connectBtn = document.getElementById('connectBtn');
+                this.createThreadBtn = document.getElementById('createThreadBtn');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.chatMessages = document.getElementById('chatMessages');
+                
+                // 피드백 모달 요소들
+                this.feedbackModal = document.getElementById('feedbackModal');
+                this.feedbackModalTitle = document.getElementById('feedbackModalTitle');
+                this.feedbackReason = document.getElementById('feedbackReason');
+                this.feedbackCancelBtn = document.getElementById('feedbackCancelBtn');
+                this.feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+            }
+
+            bindEvents() {
+                this.connectBtn.addEventListener('click', () => this.connect());
+                this.createThreadBtn.addEventListener('click', () => this.createThread());
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // 피드백 모달 이벤트
+                this.feedbackCancelBtn.addEventListener('click', () => this.closeFeedbackModal());
+                this.feedbackSubmitBtn.addEventListener('click', () => this.submitFeedback());
+                this.feedbackModal.addEventListener('click', (e) => {
+                    if (e.target === this.feedbackModal) {
+                        this.closeFeedbackModal();
+                    }
+                });
+            }
+
+            connect() {
+                this.serverUrl = this.serverUrlInput.value.trim();
+                this.userId = this.userIdInput.value.trim();
+
+                if (!this.serverUrl || !this.userId) {
+                    this.showStatus('서버 URL과 사용자 ID를 입력해주세요.', 'error');
+                    return;
+                }
+
+                this.showStatus('서버 연결 테스트 중...', 'connecting');
+                
+                // 서버 연결 테스트
+                fetch(`${this.serverUrl}/actuator/health`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        console.log('Health check response:', response.status, response.statusText);
+                        if (response.ok) {
+                            this.isConnected = true;
+                            this.showStatus('서버 연결 성공! 스레드를 생성해주세요.', 'connected');
+                            this.connectBtn.textContent = '연결됨';
+                            this.connectBtn.disabled = true;
+                            this.createThreadBtn.disabled = false;
+                        } else {
+                            throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Connection failed:', error);
+                        this.showStatus(`서버 연결 실패: ${error.message}`, 'error');
+                    });
+            }
+
+            async createThread() {
+                if (!this.isConnected) {
+                    this.showStatus('먼저 서버에 연결해주세요.', 'error');
+                    return;
+                }
+
+                this.showStatus('스레드 생성 중...', 'connecting');
+                
+                try {
+                    const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
+                    const response = await fetch(`${this.serverUrl}/api/v2/search-ai/threads`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${credentials}`,
+                            'user-id': this.userId
+                        },
+                        body: JSON.stringify({
+                            ttl: 3600
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.threadId = data.threadId;
+                        
+                        this.showThreadInfo(`스레드 생성 완료! ID: ${this.threadId}`);
+                        this.showStatus('채팅을 시작할 수 있습니다.', 'connected');
+                        
+                        this.createThreadBtn.textContent = '스레드 생성됨';
+                        this.createThreadBtn.disabled = true;
+                        this.messageInput.disabled = false;
+                        this.sendBtn.disabled = false;
+                        this.messageInput.focus();
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || '스레드 생성 실패');
+                    }
+                } catch (error) {
+                    console.error('Thread creation failed:', error);
+                    this.showStatus(`스레드 생성 실패: ${error.message}`, 'error');
+                }
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || !this.threadId) return;
+
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                this.sendBtn.disabled = true;
+
+                const botMessageElement = this.addMessage('응답을 기다리는 중...', 'bot');
+                botMessageElement.innerHTML = '<div class="loading"></div> 응답을 기다리는 중...';
+
+                try {
+                    const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
+                    const response = await fetch(`${this.serverUrl}/api/v2/search-ai/threads/${this.threadId}/runs/stream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${credentials}`,
+                            'user-id': this.userId
+                        },
+                        body: JSON.stringify({
+                            input: message
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('요청 실패');
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let botResponse = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            console.log('Stream ended');
+                            console.log('Final state:', { currentRunId: this.currentRunId, botResponse: botResponse?.length });
+                            // 스트림 완료 시 피드백 버튼 추가
+                            if (this.currentRunId && botResponse) {
+                                console.log('Adding feedback buttons on stream end', this.currentRunId);
+                                this.addFeedbackButtons(botMessageElement.parentElement, this.currentRunId);
+                            } else {
+                                console.log('Conditions not met for feedback buttons:', { 
+                                    hasRunId: !!this.currentRunId, 
+                                    hasResponse: !!botResponse 
+                                });
+                            }
+                            break;
+                        }
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        console.log('Raw chunk:', chunk);
+                        const lines = chunk.split('\n');
+
+                        let currentEvent = '';
+                        
+                        for (const line of lines) {
+                            console.log('Processing line:', line);
+                            
+                            if (line.startsWith('event:')) {
+                                currentEvent = line.slice(6).trim();
+                                console.log('Event type:', currentEvent);
+                            } else if (line.startsWith('data:')) {
+                                const data = line.slice(5).trim();
+                                console.log('Extracted data:', data);
+                                
+                                if (data === '[DONE]') {
+                                    console.log('Stream completed');
+                                    botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답이 완료되었습니다.';
+                                    this.sendBtn.disabled = false;
+                                    // 스트림 완료 시 피드백 버튼 추가
+                                    if (this.currentRunId && botResponse) {
+                                        this.addFeedbackButtons(botMessageElement.parentElement, this.currentRunId);
+                                    }
+                                    return;
+                                }
+
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    console.log('Parsed JSON:', parsed, 'Event:', currentEvent);
+                                    
+                                    // metadata 이벤트에서 runId 추출
+                                    if (currentEvent === 'metadata' && parsed.run_id) {
+                                        this.currentRunId = parsed.run_id;
+                                        console.log('Run ID extracted:', this.currentRunId);
+                                    }
+                                    // messages 이벤트에서 텍스트 추출
+                                    else if (currentEvent === 'messages' && Array.isArray(parsed) && parsed.length > 0) {
+                                        const message = parsed[0];
+                                        if (message.content && typeof message.content === 'string') {
+                                            botResponse += message.content;
+                                            botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답을 생성하는 중...';
+                                            this.scrollToBottom();
+                                        }
+                                    }
+                                    // 기존 형식도 지원
+                                    else if (parsed.data) {
+                                        botResponse += parsed.data;
+                                        botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답을 생성하는 중...';
+                                        this.scrollToBottom();
+                                    }
+                                } catch (e) {
+                                    console.log('JSON parse error:', e, 'for data:', data);
+                                    // 단순 텍스트일 수도 있으므로 직접 추가 시도
+                                    if (data && data.trim()) {
+                                        botResponse += data;
+                                        botMessageElement.innerHTML = this.renderMarkdown(botResponse);
+                                        this.scrollToBottom();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Message send failed:', error);
+                    botMessageElement.innerHTML = `오류가 발생했습니다: ${error.message}`;
+                } finally {
+                    this.sendBtn.disabled = false;
+                    // 응답 완료 후 피드백 버튼 추가
+                    if (this.currentRunId && botResponse) {
+                        this.addFeedbackButtons(botMessageElement.parentElement, this.currentRunId);
+                    }
+                }
+            }
+
+            addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                
+                // 봇 메시지는 마크다운 렌더링, 사용자 메시지는 일반 텍스트
+                if (sender === 'bot') {
+                    contentDiv.innerHTML = this.renderMarkdown(text);
+                } else {
+                    contentDiv.textContent = text;
+                }
+                
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                
+                this.scrollToBottom();
+                return contentDiv;
+            }
+
+            showStatus(message, type) {
+                const existingStatus = this.chatMessages.querySelector('.status');
+                if (existingStatus) {
+                    existingStatus.remove();
+                }
+
+                const statusDiv = document.createElement('div');
+                statusDiv.className = `status ${type}`;
+                statusDiv.textContent = message;
+                this.chatMessages.appendChild(statusDiv);
+                
+                this.scrollToBottom();
+            }
+
+            showThreadInfo(message) {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'thread-info';
+                infoDiv.textContent = message;
+                this.chatMessages.appendChild(infoDiv);
+                
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            addFeedbackButtons(messageDiv, runId) {
+                console.log('addFeedbackButtons called', { messageDiv, runId });
+                
+                // 이미 피드백 버튼이 있으면 추가하지 않음
+                if (messageDiv.querySelector('.feedback-container')) {
+                    console.log('Feedback buttons already exist');
+                    return;
+                }
+
+                console.log('Creating feedback buttons');
+                const feedbackContainer = document.createElement('div');
+                feedbackContainer.className = 'feedback-container';
+
+                const likeBtn = document.createElement('button');
+                likeBtn.className = 'feedback-btn';
+                likeBtn.innerHTML = '👍 좋아요';
+                likeBtn.onclick = () => this.openFeedbackModal('like', runId, likeBtn);
+
+                const dislikeBtn = document.createElement('button');
+                dislikeBtn.className = 'feedback-btn';
+                dislikeBtn.innerHTML = '👎 별로예요';
+                dislikeBtn.onclick = () => this.openFeedbackModal('dislike', runId, dislikeBtn);
+
+                feedbackContainer.appendChild(likeBtn);
+                feedbackContainer.appendChild(dislikeBtn);
+                
+                messageDiv.appendChild(feedbackContainer);
+                console.log('Feedback buttons added successfully');
+            }
+
+            openFeedbackModal(feedbackType, runId, buttonElement) {
+                this.currentFeedback = {
+                    threadId: this.threadId,
+                    runId: runId,
+                    type: feedbackType,
+                    buttonElement: buttonElement
+                };
+
+                this.feedbackModalTitle.textContent = feedbackType === 'like' 
+                    ? '👍 좋은 점을 알려주세요' 
+                    : '👎 개선할 점을 알려주세요';
+                this.feedbackReason.value = '';
+                this.feedbackModal.style.display = 'flex';
+            }
+
+            closeFeedbackModal() {
+                this.feedbackModal.style.display = 'none';
+                this.currentFeedback = { threadId: '', runId: '', type: '' };
+            }
+
+            async submitFeedback() {
+                const reason = this.feedbackReason.value.trim();
+                
+                try {
+                    const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
+                    const response = await fetch(`${this.serverUrl}/api/v2/search-ai/feedbacks`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${credentials}`,
+                            'user-id': this.userId
+                        },
+                        body: JSON.stringify({
+                            feedbackType: this.currentFeedback.type,
+                            threadId: this.currentFeedback.threadId,
+                            runId: this.currentFeedback.runId,
+                            reason: reason || null
+                        })
+                    });
+
+                    if (response.ok) {
+                        // 성공 시 버튼 상태 업데이트
+                        const container = this.currentFeedback.buttonElement.parentElement;
+                        const buttons = container.querySelectorAll('.feedback-btn');
+                        buttons.forEach(btn => {
+                            btn.classList.add('disabled');
+                            btn.disabled = true;
+                        });
+                        
+                        this.currentFeedback.buttonElement.classList.add('active');
+                        
+                        // 성공 메시지 표시
+                        const feedbackText = document.createElement('span');
+                        feedbackText.className = 'feedback-text';
+                        feedbackText.textContent = '피드백을 보내주셔서 감사합니다!';
+                        container.appendChild(feedbackText);
+                        
+                        this.closeFeedbackModal();
+                    } else {
+                        const errorData = await response.json();
+                        alert(`피드백 전송 실패: ${errorData.message || '알 수 없는 오류'}`);
+                    }
+                } catch (error) {
+                    console.error('Feedback submission failed:', error);
+                    alert(`피드백 전송 중 오류가 발생했습니다: ${error.message}`);
+                }
+            }
+        }
+
+        // 앱 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatBot();
+        });
+    </script>
+</body>
+</html>
+
