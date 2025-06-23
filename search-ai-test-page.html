@@ -7,6 +7,25 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
     <style>
+        :root {
+            --background: oklch(1 0 0);
+            --foreground: oklch(0.145 0 0);
+            --card: oklch(1 0 0);
+            --card-foreground: oklch(0.145 0 0);
+            --primary: oklch(0.205 0 0);
+            --primary-foreground: oklch(0.985 0 0);
+            --secondary: oklch(0.97 0 0);
+            --secondary-foreground: oklch(0.205 0 0);
+            --muted: oklch(0.97 0 0);
+            --muted-foreground: oklch(0.556 0 0);
+            --accent: oklch(0.97 0 0);
+            --accent-foreground: oklch(0.205 0 0);
+            --border: oklch(0.922 0 0);
+            --input: oklch(0.922 0 0);
+            --ring: oklch(0.87 0 0);
+            --radius: 0.625rem;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,7 +34,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--background);
+            color: var(--foreground);
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,8 +46,9 @@
             width: 90%;
             max-width: 800px;
             height: 90vh;
-            background: white;
-            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
@@ -35,11 +56,12 @@
         }
 
         .chat-header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
+            background: var(--primary);
+            color: var(--primary-foreground);
             padding: 20px;
             text-align: center;
             position: relative;
+            border-bottom: 1px solid var(--border);
         }
 
         .chat-header h1 {
@@ -48,9 +70,9 @@
         }
 
         .config-section {
-            background: #f8f9fa;
+            background: var(--muted);
             padding: 15px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid var(--border);
         }
 
         .config-row {
@@ -63,49 +85,59 @@
         .config-input {
             flex: 1;
             padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--foreground);
+            border-radius: calc(var(--radius) - 2px);
             font-size: 14px;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: var(--ring);
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
         }
 
         .config-label {
             min-width: 80px;
             font-weight: 500;
-            color: #495057;
+            color: var(--muted-foreground);
         }
 
         .btn {
             padding: 8px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: calc(var(--radius) - 2px);
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s;
         }
 
         .btn-primary {
-            background: #007bff;
-            color: white;
+            background: var(--primary);
+            color: var(--primary-foreground);
         }
 
         .btn-primary:hover {
-            background: #0056b3;
+            background: var(--primary);
+            opacity: 0.9;
         }
 
         .btn-success {
-            background: #28a745;
-            color: white;
+            background: var(--accent);
+            color: var(--accent-foreground);
         }
 
         .btn-success:hover {
-            background: #1e7e34;
+            background: var(--accent);
+            opacity: 0.9;
         }
 
         .chat-messages {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            background: #fafafa;
+            background: var(--background);
         }
 
         .message {
@@ -130,22 +162,22 @@
         }
 
         .message.user .message-content {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
+            background: var(--primary);
+            color: var(--primary-foreground);
             border-bottom-right-radius: 5px;
         }
 
         .message.bot .message-content {
-            background: white;
-            border: 1px solid #e9ecef;
+            background: var(--card);
+            border: 1px solid var(--border);
             border-bottom-left-radius: 5px;
-            color: #333;
+            color: var(--card-foreground);
         }
 
         .chat-input-container {
             padding: 20px;
-            background: white;
-            border-top: 1px solid #e9ecef;
+            background: var(--card);
+            border-top: 1px solid var(--border);
         }
 
         .chat-input-wrapper {
@@ -157,8 +189,10 @@
         .chat-input {
             flex: 1;
             padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 25px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--foreground);
+            border-radius: var(--radius);
             font-size: 16px;
             resize: none;
             min-height: 50px;
@@ -167,8 +201,8 @@
 
         .chat-input:focus {
             outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+            border-color: var(--ring);
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
         }
 
         .send-btn {
@@ -176,8 +210,8 @@
             height: 50px;
             border: none;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
+            background: var(--primary);
+            color: var(--primary-foreground);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -204,26 +238,26 @@
         }
 
         .status.connecting {
-            background: #fff3cd;
-            color: #856404;
+            background: var(--muted);
+            color: var(--muted-foreground);
         }
 
         .status.connected {
-            background: #d4edda;
-            color: #155724;
+            background: var(--accent);
+            color: var(--accent-foreground);
         }
 
         .status.error {
-            background: #f8d7da;
-            color: #721c24;
+            background: var(--muted);
+            color: var(--muted-foreground);
         }
 
         .loading {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #4facfe;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -234,12 +268,12 @@
         }
 
         .thread-info {
-            background: #e3f2fd;
+            background: var(--secondary);
             padding: 10px;
             margin: 10px 0;
-            border-radius: 8px;
+            border-radius: calc(var(--radius) - 2px);
             font-size: 14px;
-            color: #1976d2;
+            color: var(--secondary-foreground);
         }
 
         /* 마크다운 스타일 */
@@ -270,25 +304,26 @@
         }
 
         .message-content blockquote {
-            border-left: 4px solid #ddd;
+            border-left: 4px solid var(--border);
             margin: 10px 0;
             padding: 8px 15px;
-            background: #f9f9f9;
+            background: var(--muted);
+            color: var(--muted-foreground);
             font-style: italic;
         }
 
         .message-content code {
-            background: #f1f1f1;
+            background: var(--muted);
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: calc(var(--radius) - 4px);
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
         }
 
         .message-content pre {
-            background: #f8f8f8;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
             padding: 12px;
             margin: 10px 0;
             overflow-x: auto;
@@ -309,22 +344,27 @@
         }
 
         .message-content th, .message-content td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--border);
             padding: 8px 12px;
             text-align: left;
         }
 
         .message-content th {
-            background: #f5f5f5;
+            background: var(--muted);
             font-weight: 600;
         }
 
+        .message-content tr:nth-child(even) {
+            background: var(--muted);
+        }
+
         .message-content a {
-            color: #4facfe;
-            text-decoration: none;
+            color: #007acc;
+            text-decoration: underline;
         }
 
         .message-content a:hover {
+            color: #005c99;
             text-decoration: underline;
         }
 
@@ -340,7 +380,7 @@
         .feedback-container {
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid #e9ecef;
+            border-top: 1px solid var(--border);
             display: flex;
             gap: 8px;
             align-items: center;
@@ -348,9 +388,10 @@
 
         .feedback-btn {
             padding: 4px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 4px);
+            background: var(--background);
+            color: var(--foreground);
             cursor: pointer;
             font-size: 12px;
             transition: all 0.2s;
@@ -360,13 +401,13 @@
         }
 
         .feedback-btn:hover {
-            background: #f8f9fa;
+            background: var(--muted);
         }
 
         .feedback-btn.active {
-            background: #4facfe;
-            color: white;
-            border-color: #4facfe;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
         }
 
         .feedback-btn.disabled {
@@ -376,7 +417,7 @@
 
         .feedback-text {
             font-size: 11px;
-            color: #666;
+            color: var(--muted-foreground);
             margin-left: 5px;
         }
 
@@ -395,28 +436,38 @@
         }
 
         .feedback-modal-content {
-            background: white;
+            background: var(--card);
+            color: var(--card-foreground);
             padding: 24px;
-            border-radius: 12px;
+            border-radius: var(--radius);
             width: 90%;
             max-width: 400px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
         }
 
         .feedback-modal h3 {
             margin: 0 0 16px 0;
-            color: #333;
+            color: var(--card-foreground);
         }
 
         .feedback-modal textarea {
             width: 100%;
             height: 100px;
             padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--foreground);
+            border-radius: calc(var(--radius) - 2px);
             resize: vertical;
             font-family: inherit;
             font-size: 14px;
+        }
+
+        .feedback-modal textarea:focus {
+            outline: none;
+            border-color: var(--ring);
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
         }
 
         .feedback-modal-buttons {
@@ -427,37 +478,44 @@
         }
 
         .btn-secondary {
-            background: #6c757d;
-            color: white;
+            background: var(--secondary);
+            color: var(--secondary-foreground);
         }
 
         .btn-secondary:hover {
-            background: #545b62;
+            background: var(--secondary);
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>🤖 검색AI 채팅봇 테스트</h1>
-            <p>v2 API 기반 실시간 채팅 테스트</p>
+            <h1>🤖 검색AI API 테스트용 페이지</h1>
+            <p><a href="https://agent-front-server.dev.multiagent.lguplus.com/swagger-ui/index.html?urls.primaryName=%EA%B2%80%EC%83%89AI+proxy+API+v2" target="_blank" style="color: #007bff; text-decoration: none;">API 문서(VPN 연결 필요)</a></p>
         </div>
 
         <div class="config-section">
             <div class="config-row">
                 <label class="config-label">서버 URL:</label>
-                <input type="text" id="serverUrl" class="config-input" value="https://agent-front-server.dev.multiagent.lguplus.com" placeholder="서버 URL을 입력하세요">
+                <input type="text" id="serverUrl" class="config-input" value="http://localhost:8080" placeholder="서버 URL을 입력하세요">
                 <button id="connectBtn" class="btn btn-primary">연결</button>
             </div>
             <div class="config-row">
                 <label class="config-label">사용자 ID:</label>
                 <input type="text" id="userId" class="config-input" value="test-user-1234" placeholder="사용자 ID를 입력하세요">
-                <button id="createThreadBtn" class="btn btn-success" disabled>스레드 생성</button>
+            </div>
+            <div class="config-row">
+                <label class="config-label">요금제 코드:</label>
+                <input type="text" id="mobilePlanCode" class="config-input" value="5G_basic_plan" placeholder="예: 5G_basic_plan">
+                <label class="config-label">요금제 이름:</label>
+                <input type="text" id="mobilePlanName" class="config-input" value="5G 기본 요금제" placeholder="예: 5G 기본 요금제">
+                <button id="createThreadBtn" class="btn btn-primary" disabled>스레드 생성</button>
             </div>
             <div class="config-row" style="display: none;">
                 <label class="config-label">API 인증:</label>
-                <input type="text" id="apiUsername" class="config-input" value="DIGITAL-PLATFORM-BE-USERNAME" placeholder="API 사용자명">
-                <input type="password" id="apiPassword" class="config-input" value="DIGITAL-PLATFORM-BE-PASSWORD" placeholder="API 비밀번호">
+                <input type="text" id="apiUsername" class="config-input" value="CHATBOT-POC-USERNAME" placeholder="API 사용자명">
+                <input type="password" id="apiPassword" class="config-input" value="CHATBOT-POC-PASSWORD" placeholder="API 비밀번호">
             </div>
         </div>
 
@@ -534,6 +592,8 @@
             initElements() {
                 this.serverUrlInput = document.getElementById('serverUrl');
                 this.userIdInput = document.getElementById('userId');
+                this.mobilePlanCodeInput = document.getElementById('mobilePlanCode');
+                this.mobilePlanNameInput = document.getElementById('mobilePlanName');
                 this.apiUsernameInput = document.getElementById('apiUsername');
                 this.apiPasswordInput = document.getElementById('apiPassword');
                 this.connectBtn = document.getElementById('connectBtn');
@@ -615,6 +675,14 @@
                     return;
                 }
 
+                const mobilePlanCode = this.mobilePlanCodeInput.value.trim();
+                const mobilePlanName = this.mobilePlanNameInput.value.trim();
+
+                if (!mobilePlanCode || !mobilePlanName) {
+                    this.showStatus('모바일 요금제 정보를 입력해주세요.', 'error');
+                    return;
+                }
+
                 this.showStatus('스레드 생성 중...', 'connecting');
                 
                 try {
@@ -627,7 +695,11 @@
                             'user-id': this.userId
                         },
                         body: JSON.stringify({
-                            ttl: 3600
+                            ttl: 1,
+                            mobilePlan: {
+                                code: mobilePlanCode,
+                                name: mobilePlanName
+                            }
                         })
                     });
 
@@ -933,4 +1005,3 @@
     </script>
 </body>
 </html>
-
