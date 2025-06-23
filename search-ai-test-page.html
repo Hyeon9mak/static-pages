@@ -805,6 +805,10 @@
                             console.log('Final state:', { currentRunId: this.currentRunId, botResponse: botResponse?.length });
                             clearInterval(waitTimer);
                             clearTimeout(timeoutTimer);
+                            // 스트림 완료 시 최종 응답 표시
+                            if (botResponse) {
+                                botMessageElement.innerHTML = this.renderMarkdown(botResponse);
+                            }
                             // 스트림 완료 시 피드백 버튼 추가
                             if (this.currentRunId && botResponse) {
                                 console.log('Adding feedback buttons on stream end', this.currentRunId);
@@ -838,7 +842,12 @@
                                     console.log('Stream completed');
                                     clearInterval(waitTimer);
                                     clearTimeout(timeoutTimer);
-                                    botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답이 완료되었습니다.';
+                                    // 최종 응답 표시
+                                    if (botResponse) {
+                                        botMessageElement.innerHTML = this.renderMarkdown(botResponse);
+                                    } else {
+                                        botMessageElement.innerHTML = '응답이 완료되었습니다.';
+                                    }
                                     this.sendBtn.disabled = false;
                                     // 스트림 완료 시 피드백 버튼 추가
                                     if (this.currentRunId && botResponse) {
@@ -860,6 +869,7 @@
                                     else if (currentEvent === 'messages' && Array.isArray(parsed) && parsed.length > 0) {
                                         const message = parsed[0];
                                         if (message.content && typeof message.content === 'string') {
+                                            clearInterval(waitTimer); // 응답이 시작되면 대기 타이머 정리
                                             botResponse += message.content;
                                             botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답을 생성하는 중...';
                                             this.scrollToBottom();
@@ -892,6 +902,10 @@
                     clearInterval(waitTimer);
                     clearTimeout(timeoutTimer);
                     this.sendBtn.disabled = false;
+                    // 응답이 있는 경우에만 최종 렌더링
+                    if (botResponse) {
+                        botMessageElement.innerHTML = this.renderMarkdown(botResponse);
+                    }
                     // 응답 완료 후 피드백 버튼 추가
                     if (this.currentRunId && botResponse) {
                         this.addFeedbackButtons(botMessageElement.parentElement, this.currentRunId);
