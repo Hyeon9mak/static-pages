@@ -745,7 +745,43 @@
                 this.sendBtn.disabled = true;
 
                 const botMessageElement = this.addMessage('응답을 기다리는 중...', 'bot');
-                botMessageElement.innerHTML = '<div class="loading"></div> 응답을 기다리는 중...';
+                const startTime = Date.now();
+                let waitTimer = null;
+                let timeoutTimer = null;
+                let retryButton = null;
+                
+                // 응답 대기 시간 표시 및 메시지 변경 관리
+                const updateWaitingMessage = () => {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    
+                    if (elapsed < 3) {
+                        botMessageElement.innerHTML = `<div class="loading"></div> 응답을 기다리는 중... <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
+                    } else if (elapsed < 10) {
+                        botMessageElement.innerHTML = `<div class="loading"></div> 답변이 지연되고 있어요. 잠시만 기다려주세요. <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
+                    } else {
+                        // 10초 경과 시 에러 메시지와 재시도 버튼
+                        clearInterval(waitTimer);
+                        botMessageElement.innerHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <p>검색AI 가 최선을 다해 고민하고 있어요... 강제로 현재 검색을 취소하고 다시 시도할까요?</p>
+                                <button id="retryBtn" class="btn btn-primary" style="margin-top: 10px;">다시시도하기</button>
+                            </div>
+                        `;
+                        
+                        retryButton = botMessageElement.querySelector('#retryBtn');
+                        if (retryButton) {
+                            retryButton.onclick = () => {
+                                // 임시 경로로 설정 (API 개발 전)
+                                window.location.href = '/api/retry-placeholder';
+                            };
+                        }
+                        return;
+                    }
+                };
+                
+                // 1초마다 대기 시간 업데이트
+                waitTimer = setInterval(updateWaitingMessage, 1000);
+                updateWaitingMessage(); // 즉시 첫 업데이트
 
                 try {
                     const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
@@ -774,6 +810,8 @@
                         if (done) {
                             console.log('Stream ended');
                             console.log('Final state:', { currentRunId: this.currentRunId, botResponse: botResponse?.length });
+                            clearInterval(waitTimer);
+                            clearTimeout(timeoutTimer);
                             // 스트림 완료 시 피드백 버튼 추가
                             if (this.currentRunId && botResponse) {
                                 console.log('Adding feedback buttons on stream end', this.currentRunId);
@@ -805,6 +843,8 @@
                                 
                                 if (data === '[DONE]') {
                                     console.log('Stream completed');
+                                    clearInterval(waitTimer);
+                                    clearTimeout(timeoutTimer);
                                     botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답이 완료되었습니다.';
                                     this.sendBtn.disabled = false;
                                     // 스트림 완료 시 피드백 버튼 추가
@@ -852,8 +892,12 @@
                     }
                 } catch (error) {
                     console.error('Message send failed:', error);
+                    clearInterval(waitTimer);
+                    clearTimeout(timeoutTimer);
                     botMessageElement.innerHTML = `오류가 발생했습니다: ${error.message}`;
                 } finally {
+                    clearInterval(waitTimer);
+                    clearTimeout(timeoutTimer);
                     this.sendBtn.disabled = false;
                     // 응답 완료 후 피드백 버튼 추가
                     if (this.currentRunId && botResponse) {
