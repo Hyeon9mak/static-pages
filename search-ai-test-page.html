@@ -759,23 +759,16 @@
                     } else if (elapsed < 10) {
                         botMessageElement.innerHTML = `<div class="loading"></div> 답변이 지연되고 있어요. 잠시만 기다려주세요. <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
                     } else {
-                        // 10초 경과 시 에러 메시지와 재시도 버튼
-                        clearInterval(waitTimer);
-                        botMessageElement.innerHTML = `
-                            <div style="text-align: center; padding: 20px;">
-                                <p>검색AI 가 최선을 다해 고민하고 있어요... 강제로 현재 검색을 취소하고 다시 시도할까요?</p>
-                                <button id="retryBtn" class="btn btn-primary" style="margin-top: 10px;">다시시도하기</button>
-                            </div>
-                        `;
+                        // 10초 경과 시에도 계속 시간 업데이트
+                        botMessageElement.innerHTML = `<div class="loading"></div> <br>검색AI 가 최선을 다해 고민하고 있어요...<br>강제로 현재 검색을 취소하고 다시 시도할까요?<br><button id="retryBtn" class="btn btn-primary" style="margin-top: 10px;">다시시도하기(아직 미지원)</button> <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
                         
                         retryButton = botMessageElement.querySelector('#retryBtn');
                         if (retryButton) {
                             retryButton.onclick = () => {
                                 // 임시 경로로 설정 (API 개발 전)
-                                window.location.href = '/api/retry-placeholder';
+                                // window.location.href = '/api/retry-placeholder';
                             };
                         }
-                        return;
                     }
                 };
                 
