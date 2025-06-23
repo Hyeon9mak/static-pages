@@ -615,8 +615,19 @@
                 this.createThreadBtn.addEventListener('click', () => this.createThread());
                 this.sendBtn.addEventListener('click', () => this.sendMessage());
                 
+                // 한글 입력 중복 호출 방지를 위한 상태 변수
+                this.isComposing = false;
+                
+                this.messageInput.addEventListener('compositionstart', () => {
+                    this.isComposing = true;
+                });
+                
+                this.messageInput.addEventListener('compositionend', () => {
+                    this.isComposing = false;
+                });
+                
                 this.messageInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !this.isComposing) {
                         e.preventDefault();
                         this.sendMessage();
                     }
