@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>검색AI 채팅봇 테스트</title>
+    <title>AI검색 PoC</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
     <style>
         :root {
-            --background: oklch(1 0 0);
-            --foreground: oklch(0.145 0 0);
-            --card: oklch(1 0 0);
-            --card-foreground: oklch(0.145 0 0);
-            --primary: oklch(0.205 0 0);
-            --primary-foreground: oklch(0.985 0 0);
-            --secondary: oklch(0.97 0 0);
-            --secondary-foreground: oklch(0.205 0 0);
-            --muted: oklch(0.97 0 0);
-            --muted-foreground: oklch(0.556 0 0);
-            --accent: oklch(0.97 0 0);
-            --accent-foreground: oklch(0.205 0 0);
-            --border: oklch(0.922 0 0);
-            --input: oklch(0.922 0 0);
-            --ring: oklch(0.87 0 0);
+            --background: #FFFFFF;
+            --foreground: #1F2937;
+            --card: #FFFFFF;
+            --card-foreground: #1F2937;
+            --primary: #D8026D;
+            --primary-foreground: #FFFFFF;
+            --secondary: #F9FAFB;
+            --secondary-foreground: #D8026D;
+            --muted: #F9FAFB;
+            --muted-foreground: #6B7280;
+            --accent: #F9FAFB;
+            --accent-foreground: #D8026D;
+            --border: #E5E7EB;
+            --input: #F9FAFB;
+            --ring: #D8026D;
             --radius: 0.625rem;
         }
 
@@ -67,41 +67,31 @@
         .chat-header h1 {
             font-size: 24px;
             font-weight: 600;
+            margin-bottom: 8px;
         }
 
-        .config-section {
-            background: var(--muted);
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .config-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-
-        .config-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            background: var(--background);
-            color: var(--foreground);
-            border-radius: calc(var(--radius) - 2px);
+        .user-info {
             font-size: 14px;
+            opacity: 0.9;
         }
 
-        .config-input:focus {
-            outline: none;
-            border-color: var(--ring);
-            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: var(--primary-foreground);
+            padding: 8px 12px;
+            border-radius: calc(var(--radius) - 2px);
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
         }
 
-        .config-label {
-            min-width: 80px;
-            font-weight: 500;
-            color: var(--muted-foreground);
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .btn {
@@ -120,16 +110,6 @@
 
         .btn-primary:hover {
             background: var(--primary);
-            opacity: 0.9;
-        }
-
-        .btn-success {
-            background: var(--accent);
-            color: var(--accent-foreground);
-        }
-
-        .btn-success:hover {
-            background: var(--accent);
             opacity: 0.9;
         }
 
@@ -202,7 +182,7 @@
         .chat-input:focus {
             outline: none;
             border-color: var(--ring);
-            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
+            box-shadow: 0 0 0 2px rgba(216, 2, 109, 0.1);
         }
 
         .send-btn {
@@ -265,15 +245,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        .thread-info {
-            background: var(--secondary);
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: calc(var(--radius) - 2px);
-            font-size: 14px;
-            color: var(--secondary-foreground);
         }
 
         /* 마크다운 스타일 */
@@ -387,21 +358,28 @@
         }
 
         .feedback-btn {
-            padding: 4px 8px;
-            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border: 1px solid var(--primary);
             border-radius: calc(var(--radius) - 4px);
             background: var(--background);
-            color: var(--foreground);
+            color: var(--primary);
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+        }
+        
+        .evaluate-btn {
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 500;
         }
 
         .feedback-btn:hover {
-            background: var(--muted);
+            background: var(--primary);
+            color: var(--primary-foreground);
         }
 
         .feedback-btn.active {
@@ -441,7 +419,9 @@
             padding: 24px;
             border-radius: var(--radius);
             width: 90%;
-            max-width: 400px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border);
         }
@@ -467,7 +447,7 @@
         .feedback-modal textarea:focus {
             outline: none;
             border-color: var(--ring);
-            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
+            box-shadow: 0 0 0 2px rgba(216, 2, 109, 0.1);
         }
 
         .feedback-modal-buttons {
@@ -486,42 +466,156 @@
             background: var(--secondary);
             opacity: 0.9;
         }
+
+        .btn-primary:disabled {
+            background: var(--muted);
+            color: var(--muted-foreground);
+            cursor: not-allowed;
+            border-color: var(--border);
+        }
+
+        .btn-primary:disabled:hover {
+            background: var(--muted);
+            transform: none;
+        }
+
+        /* 평가 폼 스타일 */
+        .evaluation-form {
+            margin: 20px 0;
+        }
+
+        .eval-section {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eval-section:last-child {
+            border-bottom: none;
+        }
+
+        .eval-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--card-foreground);
+            font-size: 14px;
+        }
+
+        .eval-description {
+            font-size: 13px;
+            color: var(--muted-foreground);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .rating-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hallucination-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .rating-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 4px);
+            background: var(--background);
+            color: var(--foreground);
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            background: var(--muted);
+            border-color: var(--primary);
+        }
+
+        .rating-btn.selected {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+
+        .hallucination-buttons .rating-btn {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* 할루시네이션 사례 입력 */
+        .hallucination-example {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--muted);
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid var(--border);
+        }
+
+        .eval-sublabel {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--card-foreground);
+            font-size: 13px;
+        }
+
+        /* 체크박스 스타일 */
+        .improvement-checkboxes {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 0;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .checkmark {
+            flex-shrink: 0;
+        }
+
+        /* 필수 항목 표시 */
+        .required {
+            color: #DC2626;
+            font-weight: bold;
+            margin-left: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>🤖 검색AI API 테스트용 페이지</h1>
-            <p><a href="https://agent-front-server.dev.multiagent.lguplus.com/swagger-ui/index.html?urls.primaryName=%EA%B2%80%EC%83%89AI+proxy+API+v2" target="_blank" style="color: #007bff; text-decoration: none;">API 문서(VPN 연결 필요)</a></p>
-        </div>
-
-        <div class="config-section">
-            <div class="config-row">
-                <label class="config-label">서버 URL:</label>
-                <input type="text" id="serverUrl" class="config-input" value="https://agent-front-server.dev.multiagent.lguplus.com" placeholder="서버 URL을 입력하세요">
-                <button id="connectBtn" class="btn btn-primary">연결</button>
-            </div>
-            <div class="config-row">
-                <label class="config-label">사용자 ID:</label>
-                <input type="text" id="userId" class="config-input" value="test-user-1234" placeholder="사용자 ID를 입력하세요">
-            </div>
-            <div class="config-row">
-                <label class="config-label">요금제 코드:</label>
-                <input type="text" id="mobilePlanCode" class="config-input" value="5G_basic_plan" placeholder="예: 5G_basic_plan">
-                <label class="config-label">요금제 이름:</label>
-                <input type="text" id="mobilePlanName" class="config-input" value="5G 기본 요금제" placeholder="예: 5G 기본 요금제">
-                <button id="createThreadBtn" class="btn btn-primary" disabled>스레드 생성</button>
-            </div>
-            <div class="config-row" style="display: none;">
-                <label class="config-label">API 인증:</label>
-                <input type="text" id="apiUsername" class="config-input" value="CHATBOT-POC-USERNAME" placeholder="API 사용자명">
-                <input type="password" id="apiPassword" class="config-input" value="CHATBOT-POC-PASSWORD" placeholder="API 비밀번호">
+            <button class="back-btn" onclick="goBack()">← 처음으로</button>
+            <h1>🐙 AI검색 PoC</h1>
+            <div class="user-info">
+                사용자 ID: <span id="currentUserId"></span><br>
+                요금제: <span id="currentPlan"></span>
             </div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
             <div class="status connecting">
-                서버에 연결하고 스레드를 생성해주세요.
+                연결 준비 중...
             </div>
         </div>
 
@@ -542,31 +636,162 @@
         </div>
     </div>
 
-    <!-- 피드백 모달 -->
+    <!-- AI검색 응답 평가 모달 -->
     <div class="feedback-modal" id="feedbackModal">
         <div class="feedback-modal-content">
-            <h3 id="feedbackModalTitle">피드백을 남겨주세요</h3>
-            <textarea id="feedbackReason" placeholder="이 답변에 대한 의견을 자유롭게 적어주세요... (선택사항)"></textarea>
+            <h3 id="feedbackModalTitle">AI검색 응답 평가</h3>
+            
+            <div class="evaluation-form">
+                <div class="eval-section">
+                    <label class="eval-label">1. 응답 정확도 <span class="required">*</span></label>
+                    <p class="eval-description">질문 의도에 맞는 정보인가요?</p>
+                    <div class="rating-buttons">
+                        <button class="rating-btn" data-rating="5">5점 (매우 만족)</button>
+                        <button class="rating-btn" data-rating="4">4점 (전반적으로 만족)</button>
+                        <button class="rating-btn" data-rating="3">3점 (보통 수준)</button>
+                        <button class="rating-btn" data-rating="2">2점 (다소 부족함)</button>
+                        <button class="rating-btn" data-rating="1">1점 (매우 부족함)</button>
+                    </div>
+                </div>
+
+                <div class="eval-section">
+                    <label class="eval-label">2. 응답 유용성 <span class="required">*</span></label>
+                    <p class="eval-description">고객 입장에서 참고하거나 실제로 활용할 수 있는 내용인가요?</p>
+                    <div class="rating-buttons">
+                        <button class="rating-btn" data-rating="5">5점 (매우 만족)</button>
+                        <button class="rating-btn" data-rating="4">4점 (전반적으로 만족)</button>
+                        <button class="rating-btn" data-rating="3">3점 (보통 수준)</button>
+                        <button class="rating-btn" data-rating="2">2점 (다소 부족함)</button>
+                        <button class="rating-btn" data-rating="1">1점 (매우 부족함)</button>
+                    </div>
+                </div>
+
+                <div class="eval-section">
+                    <label class="eval-label">3. 응답 일관성 <span class="required">*</span></label>
+                    <p class="eval-description">유사 질문에 대해 응답간 내용이 일관적인가요?</p>
+                    <div class="rating-buttons">
+                        <button class="rating-btn" data-rating="5">5점 (매우 만족)</button>
+                        <button class="rating-btn" data-rating="4">4점 (전반적으로 만족)</button>
+                        <button class="rating-btn" data-rating="3">3점 (보통 수준)</button>
+                        <button class="rating-btn" data-rating="2">2점 (다소 부족함)</button>
+                        <button class="rating-btn" data-rating="1">1점 (매우 부족함)</button>
+                    </div>
+                </div>
+
+                <div class="eval-section">
+                    <label class="eval-label">4. 응답 문맥 흐름 (이해 용이성) <span class="required">*</span></label>
+                    <p class="eval-description">질문에 따른 응답의 흐름이나 문맥이 자연스럽고 이해하기 쉬웠나요?</p>
+                    <div class="rating-buttons">
+                        <button class="rating-btn" data-rating="5">5점 (매우 만족)</button>
+                        <button class="rating-btn" data-rating="4">4점 (전반적으로 만족)</button>
+                        <button class="rating-btn" data-rating="3">3점 (보통 수준)</button>
+                        <button class="rating-btn" data-rating="2">2점 (다소 부족함)</button>
+                        <button class="rating-btn" data-rating="1">1점 (매우 부족함)</button>
+                    </div>
+                </div>
+
+                <div class="eval-section">
+                    <label class="eval-label">5. 응답에 사실과 다른 정보나 오해를 불러올 표현이 있었나요? <span class="required">*</span></label>
+                    <div class="hallucination-buttons">
+                        <button class="rating-btn" data-hallucination="yes">예</button>
+                        <button class="rating-btn" data-hallucination="no">아니요</button>
+                    </div>
+                    <div class="hallucination-example" id="hallucinationExample" style="display: none;">
+                        <label class="eval-sublabel">5-1. 사례가 있다면 간단히 적어주세요.</label>
+                        <textarea id="hallucinationCase" placeholder="사실과 다른 정보나 오해를 불러올 표현이 있다면 구체적으로 적어주세요..." rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="eval-section">
+                    <label class="eval-label">6. 개선이 필요하다고 느낀 부분이 있다면 선택해 주세요. (복수 선택 가능)</label>
+                    <div class="improvement-checkboxes">
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="inaccurate" name="improvement">
+                            <span class="checkmark"></span>
+                            정보가 부정확하거나 핵심을 벗어남
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="too_long" name="improvement">
+                            <span class="checkmark"></span>
+                            응답이 너무 길거나 군더더기 있음
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="awkward_expression" name="improvement">
+                            <span class="checkmark"></span>
+                            표현이 어색하거나 어미/말투가 부자연스러움
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="repetitive" name="improvement">
+                            <span class="checkmark"></span>
+                            같은 문장이나 내용이 반복됨
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="hard_to_read" name="improvement">
+                            <span class="checkmark"></span>
+                            시각적으로 읽기 불편함 (구분, 강조 부족 등)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="tone_issue" name="improvement">
+                            <span class="checkmark"></span>
+                            말투가 너무 딱딱하거나, 과하게 친절함
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="hard_to_understand" name="improvement">
+                            <span class="checkmark"></span>
+                            응답 내용만으로는 이해하기 어려움
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="other" name="improvement" id="improvementOther">
+                            <span class="checkmark"></span>
+                            기타:
+                        </label>
+                        <textarea id="improvementOtherText" placeholder="기타 개선사항을 적어주세요..." rows="2" style="display: none; margin-top: 8px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="eval-section">
+                    <label class="eval-label">7. 추가 의견이 있다면 자유롭게 작성해주세요.</label>
+                    <textarea id="feedbackReason" placeholder="이 답변에 대한 의견을 자유롭게 적어주세요... (선택사항)" rows="3"></textarea>
+                </div>
+            </div>
+
             <div class="feedback-modal-buttons">
                 <button class="btn btn-secondary" id="feedbackCancelBtn">취소</button>
-                <button class="btn btn-primary" id="feedbackSubmitBtn">제출</button>
+                <button class="btn btn-primary" id="feedbackSubmitBtn">평가 제출</button>
             </div>
         </div>
     </div>
 
     <script>
+        function goBack() {
+            window.location.href = 'search-ai-init.html';
+        }
+
         class ChatBot {
             constructor() {
-                this.serverUrl = '';
+                this.serverUrl = 'https://agent-front-server.dev.multiagent.lguplus.com';
                 this.userId = '';
                 this.threadId = '';
                 this.isConnected = false;
                 this.currentRunId = '';
                 this.currentFeedback = { threadId: '', runId: '', type: '' };
+                this.apiUsername = 'CHATBOT-POC-USERNAME';
+                this.apiPassword = 'CHATBOT-POC-PASSWORD';
+                this.evaluationData = {
+                    accuracy: null,
+                    usefulness: null,
+                    consistency: null,
+                    contextFlow: null,
+                    hallucination: null,
+                    hallucinationCase: '',
+                    improvements: [],
+                    improvementOther: ''
+                };
 
                 this.initElements();
                 this.bindEvents();
                 this.initMarkdown();
+                this.initFromUrl();
             }
 
             initMarkdown() {
@@ -590,14 +815,8 @@
             }
 
             initElements() {
-                this.serverUrlInput = document.getElementById('serverUrl');
-                this.userIdInput = document.getElementById('userId');
-                this.mobilePlanCodeInput = document.getElementById('mobilePlanCode');
-                this.mobilePlanNameInput = document.getElementById('mobilePlanName');
-                this.apiUsernameInput = document.getElementById('apiUsername');
-                this.apiPasswordInput = document.getElementById('apiPassword');
-                this.connectBtn = document.getElementById('connectBtn');
-                this.createThreadBtn = document.getElementById('createThreadBtn');
+                this.currentUserId = document.getElementById('currentUserId');
+                this.currentPlan = document.getElementById('currentPlan');
                 this.messageInput = document.getElementById('messageInput');
                 this.sendBtn = document.getElementById('sendBtn');
                 this.chatMessages = document.getElementById('chatMessages');
@@ -611,8 +830,6 @@
             }
 
             bindEvents() {
-                this.connectBtn.addEventListener('click', () => this.connect());
-                this.createThreadBtn.addEventListener('click', () => this.createThread());
                 this.sendBtn.addEventListener('click', () => this.sendMessage());
                 
                 // 한글 입력 중복 호출 방지를 위한 상태 변수
@@ -641,63 +858,84 @@
                         this.closeFeedbackModal();
                     }
                 });
+
+                // 평가 버튼 이벤트 (동적으로 추가되는 버튼들)
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('rating-btn')) {
+                        this.handleRatingClick(e);
+                        this.updateSubmitButton();
+                    }
+                });
+
+                // 체크박스 이벤트
+                document.addEventListener('change', (e) => {
+                    if (e.target.name === 'improvement') {
+                        this.handleImprovementChange(e);
+                    }
+                });
             }
 
-            connect() {
-                this.serverUrl = this.serverUrlInput.value.trim();
-                this.userId = this.userIdInput.value.trim();
+            initFromUrl() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('userId');
+                const planCode = urlParams.get('planCode');
+                const planName = urlParams.get('planName');
 
-                if (!this.serverUrl || !this.userId) {
-                    this.showStatus('서버 URL과 사용자 ID를 입력해주세요.', 'error');
+                if (!userId || !planCode || !planName) {
+                    alert('잘못된 접근입니다. 초기 페이지로 이동합니다.');
+                    window.location.href = 'search-ai-init.html';
                     return;
                 }
 
-                this.showStatus('서버 연결 테스트 중...', 'connecting');
+                // URL 디코딩
+                this.userId = decodeURIComponent(userId);
+                this.planCode = decodeURIComponent(planCode);
+                this.planName = decodeURIComponent(planName);
+
+                // UI에 정보 표시
+                this.currentUserId.textContent = this.userId;
+                this.currentPlan.textContent = this.planName;
+
+                // 채팅 시작
+                this.connect();
+            }
+
+            async connect() {
+                this.showStatus('연결 중...', 'connecting');
                 
                 // 서버 연결 테스트
-                fetch(`${this.serverUrl}/actuator/health`, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                    .then(response => {
-                        console.log('Health check response:', response.status, response.statusText);
-                        if (response.ok) {
-                            this.isConnected = true;
-                            this.showStatus('서버 연결 성공! 스레드를 생성해주세요.', 'connected');
-                            this.connectBtn.textContent = '연결됨';
-                            this.connectBtn.disabled = true;
-                            this.createThreadBtn.disabled = false;
-                        } else {
-                            throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
+                try {
+                    const response = await fetch(`${this.serverUrl}/actuator/health`, {
+                        method: 'GET',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json'
                         }
-                    })
-                    .catch(error => {
-                        console.error('Connection failed:', error);
-                        this.showStatus(`서버 연결 실패: ${error.message}`, 'error');
                     });
+
+                    console.log('Health check response:', response.status, response.statusText);
+                    if (response.ok) {
+                        this.isConnected = true;
+                        await this.createThread();
+                    } else {
+                        throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Connection failed:', error);
+                    this.showStatus('연결 실패', 'error');
+                }
             }
 
             async createThread() {
                 if (!this.isConnected) {
-                    this.showStatus('먼저 서버에 연결해주세요.', 'error');
+                    this.showStatus('연결 실패', 'error');
                     return;
                 }
 
-                const mobilePlanCode = this.mobilePlanCodeInput.value.trim();
-                const mobilePlanName = this.mobilePlanNameInput.value.trim();
-
-                if (!mobilePlanCode || !mobilePlanName) {
-                    this.showStatus('모바일 요금제 정보를 입력해주세요.', 'error');
-                    return;
-                }
-
-                this.showStatus('스레드 생성 중...', 'connecting');
+                this.showStatus('연결 중...', 'connecting');
                 
                 try {
-                    const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
+                    const credentials = btoa(`${this.apiUsername}:${this.apiPassword}`);
                     const response = await fetch(`${this.serverUrl}/api/v2/search-ai/threads`, {
                         method: 'POST',
                         headers: {
@@ -708,8 +946,8 @@
                         body: JSON.stringify({
                             ttl: 1,
                             mobilePlan: {
-                                code: mobilePlanCode,
-                                name: mobilePlanName
+                                code: this.planCode,
+                                name: this.planName
                             }
                         })
                     });
@@ -718,11 +956,7 @@
                         const data = await response.json();
                         this.threadId = data.threadId;
                         
-                        this.showThreadInfo(`스레드 생성 완료! ID: ${this.threadId}`);
-                        this.showStatus('채팅을 시작할 수 있습니다.', 'connected');
-                        
-                        this.createThreadBtn.textContent = '스레드 생성됨';
-                        this.createThreadBtn.disabled = true;
+                        this.showStatus('연결 성공', 'connected');
                         this.messageInput.disabled = false;
                         this.sendBtn.disabled = false;
                         this.messageInput.focus();
@@ -732,7 +966,7 @@
                     }
                 } catch (error) {
                     console.error('Thread creation failed:', error);
-                    this.showStatus(`스레드 생성 실패: ${error.message}`, 'error');
+                    this.showStatus('연결 실패', 'error');
                 }
             }
 
@@ -748,25 +982,43 @@
                 const startTime = Date.now();
                 let waitTimer = null;
                 let timeoutTimer = null;
-                let retryButton = null;
+                let cancelButton = null;
                 
                 // 응답 대기 시간 표시 및 메시지 변경 관리
                 const updateWaitingMessage = () => {
                     const elapsed = Math.floor((Date.now() - startTime) / 1000);
                     
-                    if (elapsed < 3) {
-                        botMessageElement.innerHTML = `<div class="loading"></div> 응답을 기다리는 중... <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
+                    if (elapsed < 5) {
+                        botMessageElement.innerHTML = `<div class="loading"></div> 답변 생성중... <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
                     } else if (elapsed < 10) {
                         botMessageElement.innerHTML = `<div class="loading"></div> 답변이 지연되고 있어요. 잠시만 기다려주세요. <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
                     } else {
-                        // 10초 경과 시에도 계속 시간 업데이트
-                        botMessageElement.innerHTML = `<div class="loading"></div> <br>검색AI 가 최선을 다해 고민하고 있어요...<br>강제로 현재 검색을 취소하고 다시 시도할까요?<br><button id="retryBtn" class="btn btn-primary" style="margin-top: 10px;">다시시도하기(아직 미지원)</button> <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
+                        botMessageElement.innerHTML = `<div class="loading"></div> <br>검색AI 가 최선을 다해 고민하고 있어요...<br>현재 검색을 취소 할까요?<br><button id="cancelBtn" class="btn btn-primary" style="margin-top: 10px;">취소하기</button> <span style="font-size: 0.8em; color: var(--muted-foreground);">(${elapsed}초)</span>`;
                         
-                        retryButton = botMessageElement.querySelector('#retryBtn');
-                        if (retryButton) {
-                            retryButton.onclick = () => {
-                                // 임시 경로로 설정 (API 개발 전)
-                                // window.location.href = '/api/retry-placeholder';
+                        cancelButton = botMessageElement.querySelector('#cancelBtn');
+                        if (cancelButton) {
+                            cancelButton.onclick = async () => {
+                                try {
+                                    const credentials = btoa(`${this.apiUsername}:${this.apiPassword}`);
+                                    await fetch(`${this.serverUrl}/api/v2/search-ai/threads/${this.threadId}/runs/${this.currentRunId}/cancel`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Accept': 'text/event-stream',
+                                            'Authorization': `Basic ${credentials}`,
+                                            'user-id': this.userId
+                                        }
+                                    });
+                                    
+                                    // 취소 완료 처리
+                                    clearInterval(waitTimer);
+                                    clearTimeout(timeoutTimer);
+                                    botMessageElement.innerHTML = '검색이 취소되었습니다.';
+                                    this.sendBtn.disabled = false;
+                                } catch (error) {
+                                    console.error('Cancel request failed:', error);
+                                    botMessageElement.innerHTML = '취소 요청에 실패했습니다.';
+                                    this.sendBtn.disabled = false;
+                                }
                             };
                         }
                     }
@@ -777,7 +1029,7 @@
                 updateWaitingMessage(); // 즉시 첫 업데이트
 
                 try {
-                    const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
+                    const credentials = btoa(`${this.apiUsername}:${this.apiPassword}`);
                     const response = await fetch(`${this.serverUrl}/api/v2/search-ai/threads/${this.threadId}/runs/stream`, {
                         method: 'POST',
                         headers: {
@@ -875,6 +1127,13 @@
                                             this.scrollToBottom();
                                         }
                                     }
+                                    // custom 이벤트에서 텍스트 추출
+                                    else if (currentEvent === 'custom' && parsed.content && typeof parsed.content === 'string') {
+                                        clearInterval(waitTimer); // 응답이 시작되면 대기 타이머 정리
+                                        botResponse += parsed.content;
+                                        botMessageElement.innerHTML = this.renderMarkdown(botResponse) || '응답을 생성하는 중...';
+                                        this.scrollToBottom();
+                                    }
                                     // 기존 형식도 지원
                                     else if (parsed.data) {
                                         botResponse += parsed.data;
@@ -948,15 +1207,6 @@
                 this.scrollToBottom();
             }
 
-            showThreadInfo(message) {
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'thread-info';
-                infoDiv.textContent = message;
-                this.chatMessages.appendChild(infoDiv);
-                
-                this.scrollToBottom();
-            }
-
             scrollToBottom() {
                 this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
             }
@@ -974,21 +1224,101 @@
                 const feedbackContainer = document.createElement('div');
                 feedbackContainer.className = 'feedback-container';
 
-                const likeBtn = document.createElement('button');
-                likeBtn.className = 'feedback-btn';
-                likeBtn.innerHTML = '👍 좋아요';
-                likeBtn.onclick = () => this.openFeedbackModal('like', runId, likeBtn);
+                const evaluateBtn = document.createElement('button');
+                evaluateBtn.className = 'feedback-btn evaluate-btn';
+                evaluateBtn.innerHTML = '📊 AI검색 응답 평가';
+                evaluateBtn.onclick = () => this.openFeedbackModal('evaluate', runId, evaluateBtn);
 
-                const dislikeBtn = document.createElement('button');
-                dislikeBtn.className = 'feedback-btn';
-                dislikeBtn.innerHTML = '👎 별로예요';
-                dislikeBtn.onclick = () => this.openFeedbackModal('dislike', runId, dislikeBtn);
-
-                feedbackContainer.appendChild(likeBtn);
-                feedbackContainer.appendChild(dislikeBtn);
+                feedbackContainer.appendChild(evaluateBtn);
                 
                 messageDiv.appendChild(feedbackContainer);
                 console.log('Feedback buttons added successfully');
+            }
+
+            handleRatingClick(e) {
+                const button = e.target;
+                const section = button.closest('.eval-section');
+                
+                // 같은 섹션의 다른 버튼들 선택 해제
+                section.querySelectorAll('.rating-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // 클릭된 버튼 선택
+                button.classList.add('selected');
+                
+                // 데이터 저장
+                if (button.hasAttribute('data-rating')) {
+                    const rating = button.getAttribute('data-rating');
+                    if (section.querySelector('.eval-label').textContent.includes('1. 응답 정확도')) {
+                        this.evaluationData.accuracy = rating;
+                    } else if (section.querySelector('.eval-label').textContent.includes('2. 응답 유용성')) {
+                        this.evaluationData.usefulness = rating;
+                    } else if (section.querySelector('.eval-label').textContent.includes('3. 응답 일관성')) {
+                        this.evaluationData.consistency = rating;
+                    } else if (section.querySelector('.eval-label').textContent.includes('4. 응답 문맥 흐름')) {
+                        this.evaluationData.contextFlow = rating;
+                    }
+                } else if (button.hasAttribute('data-hallucination')) {
+                    const value = button.getAttribute('data-hallucination');
+                    this.evaluationData.hallucination = value;
+                    
+                    // 할루시네이션 "예" 선택 시 사례 입력란 표시
+                    const exampleDiv = document.getElementById('hallucinationExample');
+                    if (value === 'yes') {
+                        exampleDiv.style.display = 'block';
+                    } else {
+                        exampleDiv.style.display = 'none';
+                        document.getElementById('hallucinationCase').value = '';
+                    }
+                }
+            }
+
+            handleImprovementChange(e) {
+                const checkbox = e.target;
+                const value = checkbox.value;
+                
+                if (checkbox.checked) {
+                    if (!this.evaluationData.improvements.includes(value)) {
+                        this.evaluationData.improvements.push(value);
+                    }
+                } else {
+                    this.evaluationData.improvements = this.evaluationData.improvements.filter(item => item !== value);
+                }
+                
+                // "기타" 선택 시 텍스트 입력란 표시/숨김
+                if (value === 'other') {
+                    const otherTextArea = document.getElementById('improvementOtherText');
+                    if (checkbox.checked) {
+                        otherTextArea.style.display = 'block';
+                    } else {
+                        otherTextArea.style.display = 'none';
+                        otherTextArea.value = '';
+                        this.evaluationData.improvementOther = '';
+                    }
+                }
+            }
+
+            updateSubmitButton() {
+                const submitBtn = document.getElementById('feedbackSubmitBtn');
+                if (!submitBtn) return;
+                
+                // 필수 항목 체크 (1~5번)
+                const isValid = this.evaluationData.accuracy && 
+                              this.evaluationData.usefulness && 
+                              this.evaluationData.consistency && 
+                              this.evaluationData.contextFlow && 
+                              this.evaluationData.hallucination;
+                
+                if (isValid) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '평가 제출';
+                    submitBtn.style.opacity = '1';
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '필수 항목을 선택해주세요';
+                    submitBtn.style.opacity = '0.6';
+                }
             }
 
             openFeedbackModal(feedbackType, runId, buttonElement) {
@@ -999,10 +1329,40 @@
                     buttonElement: buttonElement
                 };
 
-                this.feedbackModalTitle.textContent = feedbackType === 'like' 
-                    ? '👍 좋은 점을 알려주세요' 
-                    : '👎 개선할 점을 알려주세요';
+                // 평가 데이터 초기화
+                this.evaluationData = {
+                    accuracy: null,
+                    usefulness: null,
+                    consistency: null,
+                    contextFlow: null,
+                    hallucination: null,
+                    hallucinationCase: '',
+                    improvements: [],
+                    improvementOther: ''
+                };
+
+                // 모든 선택 상태 초기화
+                this.feedbackModal.querySelectorAll('.rating-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // 체크박스 초기화
+                this.feedbackModal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.checked = false;
+                });
+                
+                // 텍스트 입력 초기화
                 this.feedbackReason.value = '';
+                document.getElementById('hallucinationCase').value = '';
+                document.getElementById('improvementOtherText').value = '';
+                
+                // 숨겨진 영역 초기화
+                document.getElementById('hallucinationExample').style.display = 'none';
+                document.getElementById('improvementOtherText').style.display = 'none';
+
+                // 제출 버튼 초기 상태 설정
+                this.updateSubmitButton();
+
                 this.feedbackModal.style.display = 'flex';
             }
 
@@ -1014,8 +1374,25 @@
             async submitFeedback() {
                 const reason = this.feedbackReason.value.trim();
                 
+                // 필수 평가 항목 체크 (1~5번)
+                const missingItems = [];
+                if (!this.evaluationData.accuracy) missingItems.push('1. 응답 정확도');
+                if (!this.evaluationData.usefulness) missingItems.push('2. 응답 유용성');
+                if (!this.evaluationData.consistency) missingItems.push('3. 응답 일관성');
+                if (!this.evaluationData.contextFlow) missingItems.push('4. 응답 문맥 흐름');
+                if (!this.evaluationData.hallucination) missingItems.push('5. 할루시네이션 여부');
+                
+                if (missingItems.length > 0) {
+                    alert(`다음 필수 항목을 선택해주세요:\n• ${missingItems.join('\n• ')}`);
+                    return;
+                }
+                
+                // 할루시네이션 사례와 개선사항 기타 텍스트 수집
+                this.evaluationData.hallucinationCase = document.getElementById('hallucinationCase').value.trim();
+                this.evaluationData.improvementOther = document.getElementById('improvementOtherText').value.trim();
+                
                 try {
-                    const credentials = btoa(`${this.apiUsernameInput.value}:${this.apiPasswordInput.value}`);
+                    const credentials = btoa(`${this.apiUsername}:${this.apiPassword}`);
                     const response = await fetch(`${this.serverUrl}/api/v2/search-ai/feedbacks`, {
                         method: 'POST',
                         headers: {
@@ -1027,6 +1404,14 @@
                             feedbackType: this.currentFeedback.type,
                             threadId: this.currentFeedback.threadId,
                             runId: this.currentFeedback.runId,
+                            accuracy: this.evaluationData.accuracy,
+                            usefulness: this.evaluationData.usefulness,
+                            consistency: this.evaluationData.consistency,
+                            contextFlow: this.evaluationData.contextFlow,
+                            hallucination: this.evaluationData.hallucination,
+                            hallucinationCase: this.evaluationData.hallucinationCase,
+                            improvements: this.evaluationData.improvements,
+                            improvementOther: this.evaluationData.improvementOther,
                             reason: reason || null
                         })
                     });
@@ -1045,7 +1430,7 @@
                         // 성공 메시지 표시
                         const feedbackText = document.createElement('span');
                         feedbackText.className = 'feedback-text';
-                        feedbackText.textContent = '피드백을 보내주셔서 감사합니다!';
+                        feedbackText.textContent = '평가를 보내주셔서 감사합니다!';
                         container.appendChild(feedbackText);
                         
                         this.closeFeedbackModal();
